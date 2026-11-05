@@ -1,17 +1,12 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 import Protected from "~/components/Protected";
+import CurrencyInput from "~/components/CurrencyInput";
 import { supabase } from "~/lib/supabase/client";
 import { useAuth } from "~/lib/auth";
+import { CATEGORY_LABELS, UNIT_OPTIONS, categoryHasVolume } from "~/lib/inventory";
 import type { Tables } from "~/types/database";
 
 type InventoryItem = Tables<"inventory_items">;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  bebida: "Bebida",
-  botella: "Botella",
-  comida: "Comida",
-  otro: "Otro",
-};
 
 async function fetchInventory() {
   const { data, error } = await supabase.from("inventory_items").select("*").order("category").order("name");
@@ -34,11 +29,18 @@ function InventarioContent() {
 
   const [newName, setNewName] = createSignal("");
   const [newCategory, setNewCategory] = createSignal("bebida");
-  const [newUnit, setNewUnit] = createSignal("unidad");
+  const [newUnit, setNewUnit] = createSignal(UNIT_OPTIONS.bebida[0]);
+  const [newVolumeMl, setNewVolumeMl] = createSignal("");
   const [newPrice, setNewPrice] = createSignal("0");
   const [newStock, setNewStock] = createSignal("0");
   const [newThreshold, setNewThreshold] = createSignal("5");
   const [formError, setFormError] = createSignal<string | null>(null);
+
+  function handleCategoryChange(category: string) {
+    setNewCategory(category);
+    setNewUnit(UNIT_OPTIONS[category][0]);
+    if (!categoryHasVolume(category)) setNewVolumeMl("");
+  }
 
   async function handleCreate(e: Event) {
     e.preventDefault();
@@ -47,6 +49,7 @@ function InventarioContent() {
       name: newName(),
       category: newCategory() as InventoryItem["category"],
       unit: newUnit(),
+      volume_ml: categoryHasVolume(newCategory()) && newVolumeMl() ? Number(newVolumeMl()) : null,
       price: Number(newPrice()) || 0,
       stock_quantity: Number(newStock()) || 0,
       low_stock_threshold: Number(newThreshold()) || 0,
@@ -56,6 +59,7 @@ function InventarioContent() {
       return;
     }
     setNewName("");
+    setNewVolumeMl("");
     setNewPrice("0");
     setNewStock("0");
     setShowNewForm(false);
@@ -96,51 +100,73 @@ function InventarioContent() {
       </div>
 
       <Show when={showNewForm()}>
-        <form onSubmit={handleCreate} class="card mb-6 grid gap-3 p-4 md:grid-cols-5">
-          <input
-            required
-            placeholder="Nombre"
-            value={newName()}
-            onInput={e => setNewName(e.currentTarget.value)}
-            class="field md:col-span-2"
-          />
-          <select value={newCategory()} onChange={e => setNewCategory(e.currentTarget.value)} class="field">
-            <For each={Object.entries(CATEGORY_LABELS)}>{([value, label]) => <option value={value}>{label}</option>}</For>
-          </select>
-          <input
-            placeholder="Unidad (ej. botella, lata)"
-            value={newUnit()}
-            onInput={e => setNewUnit(e.currentTarget.value)}
-            class="field"
-          />
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Precio"
-            value={newPrice()}
-            onInput={e => setNewPrice(e.currentTarget.value)}
-            class="field"
-          />
-          <input
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Stock inicial"
-            value={newStock()}
-            onInput={e => setNewStock(e.currentTarget.value)}
-            class="field"
-          />
-          <input
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Alerta de stock bajo"
-            value={newThreshold()}
-            onInput={e => setNewThreshold(e.currentTarget.value)}
-            class="field"
-          />
-          <div class="md:col-span-5">
+        <form onSubmit={handleCreate} class="card mb-6 grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-4">
+          <div class="space-y-1 sm:col-span-2">
+            <label class="block text-sm font-medium text-stone-700">Nombre</label>
+            <input
+              required
+              placeholder="Ej. Cerveza Corona"
+              value={newName()}
+              onInput={e => setNewName(e.currentTarget.value)}
+              class="field"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-stone-700">Categoría</label>
+            <select value={newCategory()} onChange={e => handleCategoryChange(e.currentTarget.value)} class="field">
+              <For each={Object.entries(CATEGORY_LABELS)}>{([value, label]) => <option value={value}>{label}</option>}</For>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-stone-700">Unidad</label>
+            <select value={newUnit()} onChange={e => setNewUnit(e.currentTarget.value)} class="field">
+              <For each={UNIT_OPTIONS[newCategory()]}>{unit => <option value={unit}>{unit}</option>}</For>
+            </select>
+          </div>
+
+          <Show when={categoryHasVolume(newCategory())}>
+            <div class="space-y-1">
+              <label class="block text-sm font-medium text-stone-700">Contenido (ml)</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Ej. 355"
+                value={newVolumeMl()}
+                onInput={e => setNewVolumeMl(e.currentTarget.value)}
+                class="field"
+              />
+            </div>
+          </Show>
+
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-stone-700">Precio</label>
+            <CurrencyInput value={newPrice()} onInput={setNewPrice} />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-stone-700">Stock inicial</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={newStock()}
+              onInput={e => setNewStock(e.currentTarget.value)}
+              class="field"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-stone-700">Alerta de stock bajo</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={newThreshold()}
+              onInput={e => setNewThreshold(e.currentTarget.value)}
+              class="field"
+            />
+          </div>
+
+          <div class="sm:col-span-2 md:col-span-4">
             <Show when={formError()}>
               <p class="mb-2 text-sm text-red-600">{formError()}</p>
             </Show>
@@ -159,6 +185,7 @@ function InventarioContent() {
                 <th class="px-4 py-3">Producto</th>
                 <th class="px-4 py-3">Categoría</th>
                 <th class="px-4 py-3">Unidad</th>
+                <th class="px-4 py-3">Contenido</th>
                 <th class="px-4 py-3">Precio</th>
                 <th class="px-4 py-3">Stock</th>
                 <th class="px-4 py-3" />
@@ -173,15 +200,14 @@ function InventarioContent() {
                       <td class="px-4 py-3">{item.name}</td>
                       <td class="px-4 py-3">{CATEGORY_LABELS[item.category] ?? item.category}</td>
                       <td class="px-4 py-3">{item.unit}</td>
+                      <td class="px-4 py-3 text-stone-500">{item.volume_ml ? `${item.volume_ml} ml` : "—"}</td>
                       <td class="px-4 py-3">
                         <Show when={isAdmin()} fallback={`$${item.price}`}>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
+                          <CurrencyInput
                             value={item.price}
-                            onChange={e => updateField(item, "price", e.currentTarget.value)}
-                            class="field w-24 py-1"
+                            onChange={v => updateField(item, "price", v)}
+                            class="w-24"
+                            inputClass="field w-24 py-1"
                           />
                         </Show>
                       </td>
@@ -213,7 +239,7 @@ function InventarioContent() {
               </For>
               <Show when={(items() ?? []).length === 0}>
                 <tr>
-                  <td colspan="6" class="px-4 py-6 text-center text-stone-400">
+                  <td colspan="7" class="px-4 py-6 text-center text-stone-400">
                     No hay productos en el inventario.
                   </td>
                 </tr>

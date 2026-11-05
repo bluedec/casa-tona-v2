@@ -94,7 +94,7 @@ function EventosListContent() {
                         <td class="px-4 py-3">{ev.total_price != null ? `$${ev.total_price}` : "—"}</td>
                         <td class="space-x-3 whitespace-nowrap px-4 py-3 text-right">
                           <A href={`/eventos/${ev.id}`} class="link">
-                            Ver
+                            Ver Evento
                           </A>
                           <A href={`/eventos/${ev.id}/caja`} class="link">
                             Caja

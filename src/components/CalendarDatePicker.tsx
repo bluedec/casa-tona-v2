@@ -108,11 +108,13 @@ export default function CalendarDatePicker(props: {
                     classList={{
                       "aspect-square rounded-lg text-sm transition-colors": true,
                       "text-stone-300": !cell.inCurrentMonth,
-                      "text-stone-800 hover:bg-stone-100": cell.inCurrentMonth && !disabled && !selected,
                       "bg-black text-white font-semibold": selected,
-                      "bg-stone-100 text-stone-400 line-through cursor-not-allowed":
-                        cell.inCurrentMonth && cell.isOccupied,
-                      "text-stone-300 cursor-not-allowed": cell.inCurrentMonth && cell.isPast && !cell.isOccupied,
+                      "bg-blue-50 text-blue-700 line-through cursor-not-allowed":
+                        !selected && cell.inCurrentMonth && cell.isOccupied,
+                      "bg-green-50 text-green-700 hover:bg-green-100":
+                        !selected && cell.inCurrentMonth && !cell.isOccupied && !cell.isPast,
+                      "text-stone-300 cursor-not-allowed":
+                        !selected && cell.inCurrentMonth && cell.isPast && !cell.isOccupied,
                     }}
                   >
                     {cell.day}
@@ -123,12 +125,15 @@ export default function CalendarDatePicker(props: {
           </div>
         )}
       </For>
-      <div class="mt-3 flex items-center gap-4 text-xs text-stone-500">
+      <div class="mt-3 flex flex-wrap items-center gap-4 text-xs text-stone-500">
         <span class="flex items-center gap-1">
           <span class="inline-block h-3 w-3 rounded bg-black" /> Seleccionado
         </span>
         <span class="flex items-center gap-1">
-          <span class="inline-block h-3 w-3 rounded bg-stone-200" /> Ocupado
+          <span class="inline-block h-3 w-3 rounded bg-green-50 ring-1 ring-green-200" /> Disponible
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="inline-block h-3 w-3 rounded bg-blue-50 ring-1 ring-blue-200" /> Ocupado
         </span>
       </div>
     </div>

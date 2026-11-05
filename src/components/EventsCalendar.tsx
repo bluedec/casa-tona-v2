@@ -24,7 +24,7 @@ export default function EventsCalendar(props: {
   canSchedule?: boolean;
   onDaySelect: (iso: string, event: CalendarEventRow | undefined) => void;
 }) {
-  const [mode, setMode] = createSignal<ViewMode>("week");
+  const [mode, setMode] = createSignal<ViewMode>("month");
   const [weekCursor, setWeekCursor] = createSignal(startOfWeek(new Date()));
   const [monthCursor, setMonthCursor] = createSignal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const today = todayIsoDate();
@@ -188,6 +188,15 @@ export default function EventsCalendar(props: {
           </For>
         </div>
       </Show>
+
+      <div class="mt-4 flex items-center gap-4 text-xs text-stone-500">
+        <span class="flex items-center gap-1">
+          <span class="inline-block h-3 w-3 rounded bg-green-50 ring-1 ring-green-200" /> Disponible
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="inline-block h-3 w-3 rounded bg-blue-50 ring-1 ring-blue-200" /> Ocupado
+        </span>
+      </div>
     </div>
   );
 }
@@ -198,6 +207,9 @@ function DayCell(props: {
   canSchedule: boolean;
   onSelect: (iso: string, event: CalendarEventRow | undefined) => void;
 }) {
+  const isOccupied = () => props.day.inCurrentPeriod && Boolean(props.day.event);
+  const isFree = () => props.day.inCurrentPeriod && !props.day.event && !props.day.isPast;
+
   return (
     <div
       classList={{
@@ -205,7 +217,11 @@ function DayCell(props: {
         "min-h-[60px]": Boolean(props.compact),
         "min-h-[92px]": !props.compact,
         "border-black": props.day.isToday,
-        "border-stone-200": !props.day.isToday,
+        "border-stone-200": !props.day.isToday && !isOccupied() && !isFree(),
+        "border-blue-200": !props.day.isToday && isOccupied(),
+        "border-green-200": !props.day.isToday && isFree(),
+        "bg-blue-50": isOccupied(),
+        "bg-green-50": isFree(),
         "opacity-40": !props.day.inCurrentPeriod,
       }}
     >

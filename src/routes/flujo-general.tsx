@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import Protected from "~/components/Protected";
+import CurrencyInput from "~/components/CurrencyInput";
 import { supabase } from "~/lib/supabase/client";
 import { useAuth } from "~/lib/auth";
 import { formatDateEs, todayIsoDate } from "~/lib/date";
@@ -23,10 +24,14 @@ export default function FlujoGeneral() {
   );
 }
 
+type Scope = "mes" | "año";
+
 function FlujoGeneralContent() {
   const { session } = useAuth();
   const [movements, { refetch }] = createResource(fetchMovements);
+  const [scope, setScope] = createSignal<Scope>("mes");
   const [month, setMonth] = createSignal(todayIsoDate().slice(0, 7));
+  const [year, setYear] = createSignal(new Date().getFullYear());
 
   const [type, setType] = createSignal<"ingreso" | "egreso">("ingreso");
   const [category, setCategory] = createSignal("");
@@ -35,7 +40,12 @@ function FlujoGeneralContent() {
   const [date, setDate] = createSignal(todayIsoDate());
   const [formError, setFormError] = createSignal<string | null>(null);
 
-  const filtered = createMemo(() => (movements() ?? []).filter(m => m.movement_date.startsWith(month())));
+  const filtered = createMemo(() => {
+    const rows = movements() ?? [];
+    return scope() === "año"
+      ? rows.filter(m => m.movement_date.startsWith(String(year())))
+      : rows.filter(m => m.movement_date.startsWith(month()));
+  });
 
   const totals = createMemo(() => {
     const rows = filtered();
@@ -71,20 +81,71 @@ function FlujoGeneralContent() {
     <main class="mx-auto max-w-5xl p-4">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-semibold text-stone-900">Flujo de caja general</h1>
-        <input type="month" value={month()} onInput={e => setMonth(e.currentTarget.value)} class="field w-auto" />
+        <div class="flex items-center gap-3">
+          <Show
+            when={scope() === "mes"}
+            fallback={
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setYear(y => y - 1)}
+                  class="rounded-md px-2 py-1 text-stone-500 hover:bg-stone-100"
+                  aria-label="Año anterior"
+                >
+                  ‹
+                </button>
+                <span class="min-w-[4ch] text-center font-medium text-stone-900">{year()}</span>
+                <button
+                  type="button"
+                  onClick={() => setYear(y => y + 1)}
+                  class="rounded-md px-2 py-1 text-stone-500 hover:bg-stone-100"
+                  aria-label="Año siguiente"
+                >
+                  ›
+                </button>
+              </div>
+            }
+          >
+            <input type="month" value={month()} onInput={e => setMonth(e.currentTarget.value)} class="field w-auto" />
+          </Show>
+          <div class="flex rounded-lg border border-stone-300 p-0.5 text-sm">
+            <button
+              type="button"
+              onClick={() => setScope("mes")}
+              classList={{
+                "rounded-md px-3 py-1 transition-colors": true,
+                "bg-black text-white": scope() === "mes",
+                "text-stone-600 hover:bg-stone-100": scope() !== "mes",
+              }}
+            >
+              Mes
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope("año")}
+              classList={{
+                "rounded-md px-3 py-1 transition-colors": true,
+                "bg-black text-white": scope() === "año",
+                "text-stone-600 hover:bg-stone-100": scope() !== "año",
+              }}
+            >
+              Año
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="mb-6 grid gap-4 sm:grid-cols-3">
         <div class="card p-4">
-          <p class="text-sm text-stone-500">Ingresos del mes</p>
+          <p class="text-sm text-stone-500">Ingresos del {scope()}</p>
           <p class="text-2xl font-semibold text-emerald-700">${totals().ingreso.toFixed(2)}</p>
         </div>
         <div class="card p-4">
-          <p class="text-sm text-stone-500">Egresos del mes</p>
+          <p class="text-sm text-stone-500">Egresos del {scope()}</p>
           <p class="text-2xl font-semibold text-red-700">${totals().egreso.toFixed(2)}</p>
         </div>
         <div class="card p-4">
-          <p class="text-sm text-stone-500">Neto del mes</p>
+          <p class="text-sm text-stone-500">Neto del {scope()}</p>
           <p class="text-2xl font-semibold text-stone-900">${totals().neto.toFixed(2)}</p>
         </div>
       </div>
@@ -108,16 +169,7 @@ function FlujoGeneralContent() {
           onInput={e => setDescription(e.currentTarget.value)}
           class="field md:col-span-2"
         />
-        <input
-          type="number"
-          required
-          min="0"
-          step="0.01"
-          placeholder="Monto"
-          value={amount()}
-          onInput={e => setAmount(e.currentTarget.value)}
-          class="field"
-        />
+        <CurrencyInput required placeholder="Monto" value={amount()} onInput={setAmount} />
         <input type="date" value={date()} onInput={e => setDate(e.currentTarget.value)} class="field" />
         <div class="md:col-span-6">
           <Show when={formError()}>
@@ -167,7 +219,7 @@ function FlujoGeneralContent() {
               <Show when={filtered().length === 0}>
                 <tr>
                   <td colspan="5" class="px-4 py-6 text-center text-stone-400">
-                    Sin movimientos este mes.
+                    Sin movimientos este {scope()}.
                   </td>
                 </tr>
               </Show>

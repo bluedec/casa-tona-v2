@@ -10,6 +10,18 @@ body {
   color: var(--color-ink);
 }
 
+@layer base {
+  button:not(:disabled),
+  select,
+  summary,
+  [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
 @layer components {
   .field {
     @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 placeholder-stone-400 transition-colors focus:border-black focus:outline-none focus:ring-1 focus:ring-black/10;

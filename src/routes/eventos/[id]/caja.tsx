@@ -1,6 +1,7 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 import { A, useParams } from "@solidjs/router";
 import Protected from "~/components/Protected";
+import CurrencyInput from "~/components/CurrencyInput";
 import { supabase } from "~/lib/supabase/client";
 import { useAuth } from "~/lib/auth";
 import { formatDateEs } from "~/lib/date";
@@ -174,14 +175,7 @@ function EventoCajaContent() {
               <h2 class="font-medium text-stone-800">Abrir caja</h2>
               <div class="space-y-1">
                 <label class="block text-sm font-medium text-stone-700">Monto inicial</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={opening()}
-                  onInput={e => setOpening(e.currentTarget.value)}
-                  class="field"
-                />
+                <CurrencyInput value={opening()} onInput={setOpening} />
               </div>
               <Show when={formError()}>
                 <p class="text-sm text-red-600">{formError()}</p>
@@ -240,7 +234,9 @@ function EventoCajaContent() {
                       <For each={inventory()}>
                         {item => (
                           <option value={item.id}>
-                            {item.name} — ${item.price} ({item.stock_quantity} disp.)
+                            {item.name}
+                            {item.volume_ml ? ` (${item.volume_ml} ml)` : ""} — ${item.price} ({item.stock_quantity}{" "}
+                            disp.)
                           </option>
                         )}
                       </For>
@@ -274,15 +270,7 @@ function EventoCajaContent() {
                       onInput={e => setManualDesc(e.currentTarget.value)}
                       class="field"
                     />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Monto"
-                      value={manualAmount()}
-                      onInput={e => setManualAmount(e.currentTarget.value)}
-                      class="field"
-                    />
+                    <CurrencyInput placeholder="Monto" value={manualAmount()} onInput={setManualAmount} />
                     <button type="submit" class="btn-primary">
                       Agregar movimiento
                     </button>

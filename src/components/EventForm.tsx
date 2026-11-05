@@ -1,5 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import CalendarDatePicker from "~/components/CalendarDatePicker";
+import CurrencyInput from "~/components/CurrencyInput";
 import { EVENT_STATUSES, type EventStatus } from "~/lib/eventStatus";
 
 export type EventFormValues = {
@@ -127,24 +128,13 @@ export default function EventForm(props: {
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-stone-700">Precio total</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={values().total_price}
-              onInput={e => set("total_price", e.currentTarget.value)}
-              class="field"
-            />
+            <CurrencyInput value={values().total_price} onInput={v => set("total_price", v)} />
           </div>
           <div class="space-y-1">
             <label class="block text-sm font-medium text-stone-700">Anticipo</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
+            <CurrencyInput
               value={values().deposit_amount}
-              onInput={e => set("deposit_amount", e.currentTarget.value)}
-              class="field"
+              onInput={v => set("deposit_amount", v)}
             />
           </div>
         </div>
