@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --color-cream: #f6f1e8;
+  --color-ink: #1c1917;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 placeholder-stone-400 transition-colors focus:border-black focus:outline-none focus:ring-1 focus:ring-black/10;
+  }
+  .card {
+    @apply rounded-xl border border-stone-200 bg-white;
+  }
+  .btn-primary {
+    @apply rounded-lg bg-black px-4 py-2 font-medium text-white transition-colors hover:bg-stone-800 disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply rounded-lg border border-black px-4 py-2 font-medium text-black transition-colors hover:bg-stone-100 disabled:opacity-50;
+  }
+  .link {
+    @apply text-stone-700 transition-colors hover:text-black hover:underline;
+  }
+}

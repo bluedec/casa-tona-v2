@@ -1,0 +1,38 @@
+dist
+.wrangler
+.output
+.vercel
+.netlify
+.vinxi
+app.config.timestamp_*.js
+
+# Environment
+.env
+.env*.local
+
+# dependencies
+/node_modules
+
+# Supabase CLI local/machine state (config.toml and migrations/ are still tracked)
+supabase/.branches
+supabase/.temp
+supabase/snippets
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+*.launch
+.settings/
+
+# Temp
+gitignore
+
+# System Files
+.DS_Store
+Thumbs.db
